@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电商多智能体工作流 - 测试平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .task-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-btn {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-btn:hover {
+            border-color: #667eea;
+            background: #f5f5ff;
+            transform: translateX(5px);
+        }
+
+        .task-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .task-btn .icon {
+            font-size: 1.5em;
+        }
+
+        .task-btn .info {
+            flex: 1;
+        }
+
+        .task-btn .name {
+            font-weight: bold;
+            display: block;
+        }
+
+        .task-btn .desc {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            margin-top: 20px;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-box.success {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .result-box.error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-badge.success {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-badge.error {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-badge.loading {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .json-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .history-item .time {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .history-item .task-type {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .clear-history-btn {
+            margin-top: 10px;
+            padding: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .clear-history-btn:hover {
+            background: #c82333;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 电商多智能体工作流</h1>
+            <p>可视化测试平台 v1.0</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-value" id="totalRequests">0</span>
+                <div class="stat-label">总请求数</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="successCount">0</span>
+                <div class="stat-label">成功次数</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="failCount">0</span>
+                <div class="stat-label">失败次数</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="left-panel">
+                <div class="panel">
+                    <div class="panel-title">📋 选择任务类型</div>
+                    <div class="task-selector">
+                        <button class="task-btn active" data-task="product">
+                            <span class="icon">🛍️</span>
+                            <div class="info">
+                                <span class="name">商品创作</span>
+                                <span class="desc">生成商品标题和详情</span>
+                            </div>
+                        </button>
+                        <button class="task-btn" data-task="ad">
+                            <span class="icon">📊</span>
+                            <div class="info">
+                                <span class="name">投放优化</span>
+                                <span class="desc">优化广告投放策略</span>
+                            </div>
+                        </button>
+                        <button class="task-btn" data-task="service">
+                            <span class="icon">🎧</span>
+                            <div class="info">
+                                <span class="name">售后工单</span>
+                                <span class="desc">处理售后问题</span>
+                            </div>
+                        </button>
+                        <button class="task-btn" data-task="comment">
+                            <span class="icon">💬</span>
+                            <div class="info">
+                                <span class="name">差评处理</span>
+                                <span class="desc">分析并回复差评</span>
+                            </div>
+                        </button>
+                        <button class="task-btn" data-task="stock">
+                            <span class="icon">📦</span>
+                            <div class="info">
+                                <span class="name">库存管理</span>
+                                <span class="desc">查询和管理库存</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 20px;">
+                    <div class="panel-title">📜 请求历史</div>
+                    <div class="history-list" id="historyList">
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            暂无历史记录
+                        </div>
+                    </div>
+                    <button class="clear-history-btn" onclick="clearHistory()">清空历史</button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel">
+                    <div class="panel-title">⚙️ 参数配置</div>
+                    <form id="testForm">
+                        <div id="dynamicFields">
+                            <!-- 动态表单字段将在这里生成 -->
+                        </div>
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            🚀 发送请求
+                        </button>
+                    </form>
+                </div>
+
+                <div class="panel result-section">
+                    <div class="result-header">
+                        <div class="panel-title" style="border: none; margin: 0;">📊 执行结果</div>
+                        <span class="status-badge" id="statusBadge">等待请求</span>
+                    </div>
+                    <div class="result-box" id="resultBox">
+                        <div style="text-align: center; color: #999; padding: 40px;">
+                            点击"发送请求"按钮开始测试
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API 配置
+        const API_BASE_URL = 'http://127.0.0.1:8000';
+        
+        // 状态管理
+        let currentTask = 'product';
+        let requestHistory = JSON.parse(localStorage.getItem('requestHistory') || '[]');
+        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0,"success":0,"fail":0}');
+
+        // 各任务的表单配置
+        const taskConfigs = {
+            product: {
+                fields: [
+                    { name: 'keyword', label: '商品关键词', type: 'text', placeholder: '例如：纯棉T恤', required: true }
+                ],
+                description: '输入商品关键词，AI将生成吸引人的标题和详细描述'
+            },
+            ad: {
+                fields: [
+                    { name: 'shop_id', label: '店铺ID', type: 'text', placeholder: '例如：SHOP001', required: true }
+                ],
+                description: '输入店铺ID，AI将分析投放数据并给出优化建议'
+            },
+            service: {
+                fields: [
+                    { name: 'order_id', label: '订单ID', type: 'text', placeholder: '例如：OD2026001', required: true }
+                ],
+                description: '输入订单ID，AI将查询订单并提供售后方案'
+            },
+            comment: {
+                fields: [
+                    { name: 'comment', label: '差评内容', type: 'textarea', placeholder: '粘贴客户差评内容...', required: true }
+                ],
+                description: '输入客户差评，AI将分析情绪并生成安抚话术'
+            },
+            stock: {
+                fields: [
+                    { name: 'product_id', label: '商品ID', type: 'text', placeholder: '例如：P001', required: true }
+                ],
+                description: '输入商品ID，AI将查询库存并给出补货建议'
+            }
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderForm();
+            updateStats();
+            renderHistory();
+            
+            // 绑定任务选择事件
+            document.querySelectorAll('.task-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.task-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentTask = this.dataset.task;
+                    renderForm();
+                });
+            });
+
+            // 绑定表单提交事件
+            document.getElementById('testForm').addEventListener('submit', handleSubmit);
+        });
+
+        // 渲染表单
+        function renderForm() {
+            const config = taskConfigs[currentTask];
+            const container = document.getElementById('dynamicFields');
+            
+            let html = `<p style="color: #666; margin-bottom: 20px;">${config.description}</p>`;
+            
+            config.fields.forEach(field => {
+                if (field.type === 'textarea') {
+                    html += `
+                        <div class="form-group">
+                            <label for="${field.name}">${field.label} ${field.required ? '<span style="color:red">*</span>' : ''}</label>
+                            <textarea 
+                                id="${field.name}" 
+                                name="${field.name}" 
+                                placeholder="${field.placeholder}"
+                                ${field.required ? 'required' : ''}
+                            ></textarea>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="form-group">
+                            <label for="${field.name}">${field.label} ${field.required ? '<span style="color:red">*</span>' : ''}</label>
+                            <input 
+                                type="${field.type}" 
+                                id="${field.name}" 
+                                name="${field.name}" 
+                                placeholder="${field.placeholder}"
+                                ${field.required ? 'required' : ''}
+                            >
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 处理表单提交
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultBox = document.getElementById('resultBox');
+            const statusBadge = document.getElementById('statusBadge');
+            
+            // 收集表单数据
+            const formData = {};
+            const config = taskConfigs[currentTask];
+            config.fields.forEach(field => {
+                formData[field.name] = document.getElementById(field.name).value;
+            });
+
+            // 显示加载状态
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ 处理中...';
+            statusBadge.className = 'status-badge loading';
+            statusBadge.textContent = '请求中...';
+            resultBox.className = 'result-box';
+            resultBox.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>AI正在处理您的请求...</p>
+                </div>
+            `;
+
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/run`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task_type: currentTask,
+                        input_params: formData
+                    })
+                });
+
+                const result = await response.json();
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                if (response.ok) {
+                    // 成功
+                    statusBadge.className = 'status-badge success';
+                    statusBadge.textContent = '✅ 成功';
+                    resultBox.className = 'result-box success';
+
+                    // 根据任务类型美化显示结果
+                    const formattedContent = formatResult(result, currentTask);
+                    resultBox.innerHTML = `
+                        <div style="margin-bottom: 15px; color: #28a745; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                            <span>✅ 请求成功 - 耗时: ${duration}秒</span>
+                            <button onclick="toggleRawResult()" style="padding: 5px 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85em;">
+                                📄 查看原始JSON
+                            </button>
+                        </div>
+                        <div id="formattedContent">${formattedContent}</div>
+                        <div id="rawResult" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 2px dashed #e0e0e0;">
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">原始返回数据：</div>
+                            <div class="json-display">${syntaxHighlight(JSON.stringify(result, null, 2))}</div>
+                        </div>
+                    `;
+                    
+                    stats.success++;
+                } else {
+                    // 失败
+                    statusBadge.className = 'status-badge error';
+                    statusBadge.textContent = '❌ 失败';
+                    resultBox.className = 'result-box error';
+                    resultBox.innerHTML = `
+                        <div style="margin-bottom: 10px; color: #dc3545; font-weight: bold;">
+                            HTTP ${response.status} - 耗时: ${duration}秒
+                        </div>
+                        <div class="json-display">${syntaxHighlight(JSON.stringify(result, null, 2))}</div>
+                    `;
+                    
+                    stats.fail++;
+                }
+                
+                stats.total++;
+                saveStats();
+                updateStats();
+                
+                // 添加到历史
+                addToHistory(currentTask, formData, result, response.ok);
+
+            } catch (error) {
+                statusBadge.className = 'status-badge error';
+                statusBadge.textContent = '❌ 网络错误';
+                resultBox.className = 'result-box error';
+                resultBox.innerHTML = `
+                    <div style="color: #dc3545; font-weight: bold; margin-bottom: 10px;">
+                        请求失败
+                    </div>
+                    <div style="color: #666;">
+                        ${error.message}<br><br>
+                        请确保后端服务已启动：<code>python main.py</code>
+                    </div>
+                `;
+                
+                stats.fail++;
+                stats.total++;
+                saveStats();
+                updateStats();
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 发送请求';
+            }
+        }
+
+        // 格式化结果显示（美化版）
+        function formatResult(result, taskType) {
+            const agentOutput = result.agent_output || {};
+
+            // 商品创作 - 特殊美化
+            if (taskType === 'product') {
+                const title = agentOutput.title || '暂无标题';
+                const detail = agentOutput.detail || '暂无详情';
+                const needHuman = agentOutput.need_human || result.need_human;
+
+                return `
+                    <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <span style="font-size: 1.5em;">🛍️</span>
+                            <h3 style="color: #667eea; margin: 0;">商品创作结果</h3>
+                            ${needHuman ? '<span style="margin-left: auto; padding: 4px 12px; background: #ffc107; color: #333; border-radius: 12px; font-size: 0.85em; font-weight: bold;">⏸️ 待人工审核</span>' : '<span style="margin-left: auto; padding: 4px 12px; background: #28a745; color: white; border-radius: 12px; font-size: 0.85em; font-weight: bold;">✅ 自动完成</span>'}
+                        </div>
+
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #667eea;">
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 8px; font-weight: bold;">📝 商品标题</div>
+                            <div style="font-size: 1.1em; color: #333; line-height: 1.6; font-weight: 500;">${escapeHtml(title)}</div>
+                        </div>
+
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; font-weight: bold;">📄 商品详情</div>
+                            <div style="line-height: 1.8; color: #555; white-space: pre-wrap;">${formatDetail(detail)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 其他任务类型的默认显示
+            return formatOtherTasks(agentOutput, taskType);
+        }
+
+        // 格式化其他任务类型
+        function formatOtherTasks(agentOutput, taskType) {
+            const taskNames = {
+                ad: { icon: '📊', name: '投放优化' },
+                service: { icon: '🎧', name: '售后工单' },
+                comment: { icon: '💬', name: '差评处理' },
+                stock: { icon: '📦', name: '库存管理' }
+            };
+
+            const taskInfo = taskNames[taskType] || { icon: '📋', name: '任务' };
+            const needHuman = agentOutput.need_human;
+
+            let contentHtml = '';
+
+            // 根据不同任务类型提取关键字段
+            if (taskType === 'ad') {
+                contentHtml = `
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 8px; font-weight: bold;">💡 优化建议</div>
+                        <div style="line-height: 1.8; color: #555; white-space: pre-wrap;">${escapeHtml(agentOutput.suggestion || '暂无建议')}</div>
+                    </div>
+                `;
+            } else if (taskType === 'service') {
+                contentHtml = `
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 8px; font-weight: bold;">🔧 处理结果</div>
+                        <div style="line-height: 1.8; color: #555; white-space: pre-wrap;">${escapeHtml(agentOutput.result || agentOutput.error || '暂无结果')}</div>
+                    </div>
+                `;
+            } else if (taskType === 'comment') {
+                contentHtml = `
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 8px; font-weight: bold;">💬 回复话术</div>
+                        <div style="line-height: 1.8; color: #555; white-space: pre-wrap;">${escapeHtml(agentOutput.reply || '暂无回复')}</div>
+                    </div>
+                `;
+            } else if (taskType === 'stock') {
+                contentHtml = `
+                    <div style="display: grid; gap: 10px;">
+                        <div style="background: white; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.9em; color: #666; font-weight: bold;">📦 当前库存</span>
+                            <span style="font-size: 1.5em; font-weight: bold; color: ${agentOutput.stock < 50 ? '#dc3545' : '#28a745'};">${agentOutput.stock || 0} 件</span>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 8px; font-weight: bold;">📋 补货建议</div>
+                            <div style="line-height: 1.8; color: #555;">${escapeHtml(agentOutput.suggestion || '暂无建议')}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 20px; border-radius: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <span style="font-size: 1.5em;">${taskInfo.icon}</span>
+                        <h3 style="color: #667eea; margin: 0;">${taskInfo.name}结果</h3>
+                        ${needHuman ? '<span style="margin-left: auto; padding: 4px 12px; background: #ffc107; color: #333; border-radius: 12px; font-size: 0.85em; font-weight: bold;">⏸️ 待人工审核</span>' : '<span style="margin-left: auto; padding: 4px 12px; background: #28a745; color: white; border-radius: 12px; font-size: 0.85em; font-weight: bold;">✅ 自动完成</span>'}
+                    </div>
+                    ${contentHtml}
+                </div>
+            `;
+        }
+
+        // 格式化详情文本（支持 Markdown 简单语法）
+        function formatDetail(text) {
+            let formatted = escapeHtml(text);
+
+            // 处理标题 (### xxx)
+            formatted = formatted.replace(/###\s+(.+?)(?=\n|$)/g, '<h4 style="color: #667eea; margin: 15px 0 10px 0; font-size: 1.1em;">$1</h4>');
+
+            // 处理加粗 (**xxx**)
+            formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong style="color: #333;">$1</strong>');
+
+            // 处理列表项 (- xxx)
+            formatted = formatted.replace(/^- (.+?)$/gm, '<li style="margin: 5px 0; padding-left: 5px;">$1</li>');
+
+            // 将连续的 li 包裹在 ul 中
+            formatted = formatted.replace(/(<li.*<\/li>\n?)+/g, '<ul style="padding-left: 20px; margin: 10px 0;">$&</ul>');
+
+            // 处理分隔线 (---)
+            formatted = formatted.replace(/^---$/gm, '<hr style="border: none; border-top: 2px dashed #e0e0e0; margin: 15px 0;">');
+
+            return formatted;
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 切换原始JSON显示
+        function toggleRawResult() {
+            const rawResult = document.getElementById('rawResult');
+            if (rawResult) {
+                rawResult.style.display = rawResult.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // 语法高亮
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                    } else {
+                        cls = 'string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span style="color: ' + 
+                    (cls === 'key' ? '#00f' : 
+                     cls === 'string' ? '#008000' : 
+                     cls === 'boolean' ? '#ff6600' : 
+                     cls === 'null' ? '#808080' : '#0066cc') + 
+                    ';">' + match + '</span>';
+            });
+        }
+
+        // 添加到历史
+        function addToHistory(taskType, params, result, success) {
+            const historyItem = {
+                taskType,
+                params,
+                result,
+                success,
+                timestamp: new Date().toISOString()
+            };
+            
+            requestHistory.unshift(historyItem);
+            if (requestHistory.length > 20) {
+                requestHistory.pop();
+            }
+            
+            localStorage.setItem('requestHistory', JSON.stringify(requestHistory));
+            renderHistory();
+        }
+
+        // 渲染历史
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            
+            if (requestHistory.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无历史记录</div>';
+                return;
+            }
+            
+            container.innerHTML = requestHistory.map((item, index) => `
+                <div class="history-item" onclick="loadHistoryItem(${index})">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="task-type">${getTaskTypeName(item.taskType)}</span>
+                        <span style="color: ${item.success ? '#28a745' : '#dc3545'}">
+                            ${item.success ? '✅' : '❌'}
+                        </span>
+                    </div>
+                    <div class="time">${formatTime(item.timestamp)}</div>
+                </div>
+            `).join('');
+        }
+
+        // 加载历史项
+        function loadHistoryItem(index) {
+            const item = requestHistory[index];
+            const resultBox = document.getElementById('resultBox');
+            const statusBadge = document.getElementById('statusBadge');
+            
+            // 切换到对应的任务类型
+            currentTask = item.taskType;
+            document.querySelectorAll('.task-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.task === currentTask);
+            });
+            renderForm();
+            
+            // 填充表单数据
+            Object.keys(item.params).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) input.value = item.params[key];
+            });
+            
+            // 显示结果
+            statusBadge.className = `status-badge ${item.success ? 'success' : 'error'}`;
+            statusBadge.textContent = item.success ? '✅ 成功' : '❌ 失败';
+            resultBox.className = `result-box ${item.success ? 'success' : 'error'}`;
+            resultBox.innerHTML = `
+                <div style="margin-bottom: 10px; color: #666; font-size: 0.9em;">
+                    历史记录 - ${formatTime(item.timestamp)}
+                </div>
+                <div class="json-display">${syntaxHighlight(JSON.stringify(item.result, null, 2))}</div>
+            `;
+        }
+
+        // 清空历史
+        function clearHistory() {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                requestHistory = [];
+                localStorage.removeItem('requestHistory');
+                renderHistory();
+            }
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('totalRequests').textContent = stats.total;
+            document.getElementById('successCount').textContent = stats.success;
+            document.getElementById('failCount').textContent = stats.fail;
+        }
+
+        // 保存统计
+        function saveStats() {
+            localStorage.setItem('stats', JSON.stringify(stats));
+        }
+
+        // 获取任务中文名
+        function getTaskTypeName(taskType) {
+            const names = {
+                product: '🛍️ 商品创作',
+                ad: '📊 投放优化',
+                service: '🎧 售后工单',
+                comment: '💬 差评处理',
+                stock: '📦 库存管理'
+            };
+            return names[taskType] || taskType;
+        }
+
+        // 格式化时间
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) {
+                return '刚刚';
+            } else if (diff < 3600000) {
+                return Math.floor(diff / 60000) + '分钟前';
+            } else if (diff < 86400000) {
+                return Math.floor(diff / 3600000) + '小时前';
+            } else {
+                return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN');
+            }
+        }
+    </script>
+</body>
+</html>

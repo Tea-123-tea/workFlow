@@ -1,0 +1,10 @@
+langchain==1.3.2
+langgraph==1.2.2
+langchain-openai>=0.3.0
+langchain-core
+fastapi
+uvicorn
+python-dotenv
+requests
+pydantic
+pandas
